@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -22,6 +23,13 @@ public class HolidayServiceImpl implements HolidayService {
         return holidayRepository.findByEmployeeId(employeeId);
     }
 
+    public void deleteHoliday(UUID id) throws IllegalArgumentException {
+        Holiday holiday = holidayRepository.findById(id).orElseThrow(() -> new IllegalArgumentException("Holiday not found"));
+
+        validateBusinessDaysBeforeStart(holiday);
+        holidayRepository.delete(holiday);
+    }
+
     /*
      * User Story 2:
      * Create a new holiday, only if it satisfies all business rules:
@@ -32,7 +40,8 @@ public class HolidayServiceImpl implements HolidayService {
      */
     public Holiday createHoliday(Holiday holiday) {
         validateEmployeeExists(holiday.getEmployeeId());
-        validateDates(holiday);
+        validateBusinessDaysBeforeStart(holiday);
+        validateStartDateIsAfterEndDate(holiday);
         validateGapBetweenHolidays(holiday, holiday.getEmployeeId());
 
         holiday.setStatus(HolidayStatus.SCHEDULED);
@@ -46,25 +55,24 @@ public class HolidayServiceImpl implements HolidayService {
         }
     }
 
-    /*
-     * Business rules:
-     * - holiday must start after today + 5 working days
-     * - end date must be after start date
-     */
-    private void validateDates(Holiday holiday) {
+    //Business rule: creating or cancelling a holiday is after 5 business days
+    private void validateBusinessDaysBeforeStart(Holiday holiday) {
         LocalDate today = LocalDate.now();
         LocalDate start = holiday.getStartOfHoliday().toLocalDate();
 
         if (!hasWorkingDayGap(today, start, 5)) {
             throw new IllegalArgumentException("Holiday must be requested at least 5 working days in advance");
         }
+    }
 
+    //Business rule: end date must be after starting date
+    private void validateStartDateIsAfterEndDate(Holiday holiday) {
         if (holiday.getEndOfHoliday().isBefore(holiday.getStartOfHoliday())) {
             throw new IllegalArgumentException("End date cannot be before start date");
         }
     }
 
-    // There must be at least 3 working days between holidays
+    //Business rule: there must be at least 3 working days between holidays
     private void validateGapBetweenHolidays(Holiday holiday, String employeeId) {
         List<Holiday> existing = holidayRepository.findByEmployeeId(employeeId);
 
