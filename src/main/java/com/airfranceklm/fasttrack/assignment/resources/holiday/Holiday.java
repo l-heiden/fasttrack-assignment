@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.OffsetDateTime;
+import java.util.Optional;
 import java.util.UUID;
 
 @Entity
@@ -36,7 +37,5 @@ public class Holiday {
     private HolidayStatus status;
 
     @PrePersist
-    public void ensureId() {
-        holidayId = holidayId == null ? UUID.randomUUID() : holidayId;
-    }
+    public void ensureId() { Optional.ofNullable(holidayId).orElseGet(UUID::randomUUID); }
 }

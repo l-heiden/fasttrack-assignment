@@ -30,14 +30,6 @@ public class HolidayServiceImpl implements HolidayService {
         holidayRepository.delete(holiday);
     }
 
-    /*
-     * User Story 2:
-     * Create a new holiday, only if it satisfies all business rules:
-     * - employee must exist
-     * - no overlap with other holidays (still need to work this one out)
-     * - at least 3 working days gap between holidays
-     * - must be requested at least 5 working days before start
-     */
     public Holiday createHoliday(Holiday holiday) {
         validateEmployeeExists(holiday.getEmployeeId());
         validateBusinessDaysBeforeStart(holiday);
