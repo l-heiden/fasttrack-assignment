@@ -37,5 +37,5 @@ public class Holiday {
     private HolidayStatus status;
 
     @PrePersist
-    public void ensureId() { Optional.ofNullable(holidayId).orElseGet(UUID::randomUUID); }
+    public void ensureId() { holidayId = Optional.ofNullable(holidayId).orElseGet(UUID::randomUUID); }
 }
